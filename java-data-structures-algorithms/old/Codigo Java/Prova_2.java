@@ -1,0 +1,149 @@
+/**********************************************************************************
+*Faculdade de Engenharias Arquitetura e Urbanismo (FEAU) - (Univap)
+* Curso: Engenharia da Computação - Data de Entrega: 29/11/2023
+* Autor: André Vinicius Guimarães
+* Turma: 8UNA Disciplina: Algoritmos Estrutura de Dados - I
+* Avaliação – 2 (Nota parcial)
+* Observação:
+*
+* Prova2.java
+************************************************************************************/
+
+// Importações
+import java.util.Scanner;
+
+
+// Classe Prova
+public class Prova_2 {
+
+    // Métodos
+    public static Fila CalcularRegressaoLinear(Fila conjuntoDados) {
+        Fila x = new Fila();
+        Fila y = new Fila();
+        Fila coeficiente = new Fila();
+
+        while (true) {
+            Aparelhos_energia dados = (Aparelhos_energia) conjuntoDados.remover();
+            if (dados == null) {
+                break;
+            }
+            x.Insere(dados.getNumeroAparelhos_y());
+            y.Insere(dados.getConsumoEnergia_x());
+        }
+
+        double somaX = 0, somaY = 0, somaXY = 0, somaXQuadrado = 0;
+        int total = 0;
+
+        while (true) {
+            Integer xl = (Integer) x.remover(); // com double não funciona o if, nem com int etc
+            Integer yl = (Integer) y.remover();
+
+            if (xl == null) {
+                break;
+            }
+
+            total++;
+            somaX += xl;
+            somaY += yl;
+            somaXY += xl * yl;
+            somaXQuadrado += xl * xl;
+        }
+
+        double inserir = (total * somaXY - somaX * somaY) / (total * somaXQuadrado - somaX * somaX);
+        coeficiente.Insere(inserir);
+        inserir = (somaY - inserir * somaX) / total;
+        coeficiente.Insere(inserir);
+
+        return coeficiente;
+    }
+
+    public static double PreverConsumoEnergia(int numeroAparelhos, double a, double b) {
+        return a * numeroAparelhos + b;
+    }
+
+    public static double CalcularCoeficienteDeterminacao(Fila fila, double a, double b) {
+        // Obter os dados relevantes da fila
+        Fila x = new Fila();
+        Fila y = new Fila();
+        int n = 0;
+
+        while (true) {
+            Aparelhos_energia dados = (Aparelhos_energia) fila.remover();
+            if (dados == null) {
+                break;
+            }
+            x.Insere(dados.getNumeroAparelhos_y());
+            y.Insere(dados.getConsumoEnergia_x());
+            n = n + 1;
+            
+        }
+
+        // Calcular coeficiente de determinação
+        double mediaY = 0;
+        
+
+        while (true) {
+            Integer yi = (Integer) y.remover();
+            if (yi == null) {
+                break;
+            }
+            mediaY += yi;
+        }
+
+        mediaY /= n;
+        double somaQuadradosTotais = 0, somaQuadradosResiduais = 0;
+
+        while (true) {
+            Integer xi = (Integer) x.remover();
+            Integer yi = (Integer) y.remover();
+            if (xi == null || yi == null) {
+                break;
+            }
+            double yPrevisto = a * xi + b;
+            somaQuadradosTotais += Math.pow((yi - mediaY), 2);
+            somaQuadradosResiduais += Math.pow((yi - yPrevisto), 2);
+        }
+
+        return 1 - (somaQuadradosResiduais / somaQuadradosTotais);
+    }
+
+    // Main
+    public static void main(String[] args) {
+        Scanner entrada = new Scanner(System.in);
+        Fila conjuntoDados = new Fila();
+
+        // Interação Inicial
+        System.out.print("Número de dados coletados: ");
+        int numDados = Integer.parseInt(entrada.nextLine());
+        System.out.print("Número de aparelhos que deseja estimar o consumo de energia: ");
+        int numEstimar = Integer.parseInt(entrada.nextLine());
+
+        System.out.print("Número de aparelhos e Consumo de Energia:");
+        // Entrada de Dados
+        for (int i = 0; i < numDados; i++) {
+            Aparelhos_energia dados = new Aparelhos_energia();
+            
+            dados.setNumeroAparelhos_y(Integer.parseInt(entrada.nextLine()));
+            dados.setConsumoEnergia_x(Integer.parseInt(entrada.nextLine()));
+            conjuntoDados.Insere(dados);
+        }
+
+        // Regressão Linear
+        Fila coeficientes = CalcularRegressaoLinear(conjuntoDados);
+
+        double a = (double) coeficientes.remover();
+        double b = (double) coeficientes.remover();
+
+        // Exibir a equação da reta
+        System.out.println("Equação da Reta de Regressão Linear: y = " + a + "x + " + b);
+
+        // Estimar consumo para 8 aparelhos
+        double estimativaConsumo = PreverConsumoEnergia(numEstimar, a, b);
+        System.out.println("Estimativa de Consumo para " + numEstimar + " aparelhos: " + estimativaConsumo);
+
+        // Calcular coeficiente de determinação (R^2)
+        double r2 = CalcularCoeficienteDeterminacao(conjuntoDados, a, b);
+        System.out.println("Coeficiente de Determinação (R^2): " + r2);
+    }
+}
+
